@@ -5,6 +5,5 @@ matplotlib
 seaborn
 scikit-learn
 imbalanced-learn
-mca
 prince
 requests
