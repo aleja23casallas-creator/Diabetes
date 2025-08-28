@@ -213,6 +213,7 @@ cat_cols_mca.extend(categoricas_codigos)
 print("PCA (numéricas):", len(num_cols_pca), num_cols_pca)
 print("MCA (categóricas):", len(cat_cols_mca), cat_cols_mca)
 
+import matplotlib.pyplot as plt
 """📊Distribución de la variable objetivo (readmitted)"""
 
 df["readmitted"].value_counts()
