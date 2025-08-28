@@ -35,11 +35,11 @@ from sklearn.feature_selection import chi2
 from matplotlib import pyplot
 
 #Montar Googgle Drive y mover los archivos ahí
-from google.colab import drive
-drive.mount('/content/drive')
+#from google.colab import drive
+#drive.mount('/content/drive')
 
 import pandas as pd
-df = pd.read_csv("/content/drive/MyDrive/ML-BIOESTADISTICA/diabetic_data.csv")
+df = pd.read_csv("diabetic_data.csv")
 df.head()
 
 # Ver valores únicos en las columnas categóricas codificadas
