@@ -9,14 +9,11 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-
+import prince
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.decomposition import PCA
-from sklearn.neighbors import KNeighborsRegressor
-from sklearn.tree import DecisionTreeRegressor
 from imblearn.over_sampling import SMOTE
-import prince
 
 # -------------------------------
 # 1. Título y descripción
@@ -81,11 +78,9 @@ df["admission_source_id"] = df["admission_source_id"].map(lambda x: map_admissio
 # -------------------------------
 missing_vals = ["None", "?"]
 df = df.replace(missing_vals, pd.NA)
-
 cat_cols = df.select_dtypes(include='object').columns
 for col in cat_cols:
     df[col] = df[col].fillna("Sin_info")
-
 df = df.drop(columns=["encounter_id", "patient_nbr"])
 
 # -------------------------------
@@ -141,17 +136,16 @@ plt.clf()
 # -------------------------------
 # 7. Split de datos
 # -------------------------------
-x = df.drop("readmitted", axis=1)
+X = df.drop("readmitted", axis=1)
 y = df["readmitted"]
-
-x_train, x_test, y_train, y_test  = train_test_split(
-    x, y, test_size=0.2, stratify=y, random_state=42
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, stratify=y, random_state=42
 )
 
-# Escalado de variables numéricas para PCA
+# Escalado numérico
 scaler = StandardScaler()
-X_train_scaled = scaler.fit_transform(x_train[num_cols_pca])
-X_test_scaled  = scaler.transform(x_test[num_cols_pca])
+X_train_scaled = scaler.fit_transform(X_train[num_cols_pca])
+X_test_scaled  = scaler.transform(X_test[num_cols_pca])
 
 # -------------------------------
 # 8. PCA
@@ -172,7 +166,7 @@ plt.clf()
 # -------------------------------
 # 9. MCA
 # -------------------------------
-X_train_cat = x_train[cat_cols_mca].astype(str)
+X_train_cat = X_train[cat_cols_mca].astype(str)
 mca_model = prince.MCA(n_components=15, random_state=42)
 mca_model = mca_model.fit(X_train_cat)
 X_mca = mca_model.transform(X_train_cat)
@@ -201,7 +195,7 @@ X_mca_reduced = X_mca.iloc[:, :n_mca].values
 X_reduced = np.hstack((X_pca_reduced, X_mca_reduced))
 pca_cols = [f"PCA_{i+1}" for i in range(n_pca)]
 mca_cols = [f"MCA_{i+1}" for i in range(n_mca)]
-X_reduced_df = pd.DataFrame(X_reduced, columns=pca_cols + mca_cols, index=x_train.index)
+X_reduced_df = pd.DataFrame(X_reduced, columns=pca_cols + mca_cols, index=X_train.index)
 
 # -------------------------------
 # 11. Preparar datos para KNN y Árbol
@@ -226,3 +220,4 @@ X_train_res, y_train_res = smote.fit_resample(X_train, y_train)
 st.markdown("### Datos listos para KNN y Árbol de decisión")
 st.write("Filas de entrenamiento balanceadas:", X_train_res.shape[0])
 st.write("Número de columnas:", X_train_res.shape[1])
+
