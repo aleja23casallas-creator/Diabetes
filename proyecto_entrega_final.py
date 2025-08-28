@@ -226,4 +226,3 @@ X_train_res, y_train_res = smote.fit_resample(X_train, y_train)
 st.markdown("### Datos listos para KNN y Árbol de decisión")
 st.write("Filas de entrenamiento balanceadas:", X_train_res.shape[0])
 st.write("Número de columnas:", X_train_res.shape[1])
-
