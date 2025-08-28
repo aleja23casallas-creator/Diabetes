@@ -15,10 +15,7 @@ from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.decomposition import PCA
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.tree import DecisionTreeRegressor
-from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from imblearn.over_sampling import SMOTE
-
-import mca
 import prince
 
 # -------------------------------
@@ -43,12 +40,10 @@ st.dataframe(df.head())
 # -------------------------------
 # 3. Limpieza y mapeo de variables
 # -------------------------------
-# Convertir a string columnas con códigos
 df["admission_type_id"] = df["admission_type_id"].astype(str)
 df["discharge_disposition_id"] = df["discharge_disposition_id"].astype(str)
 df["admission_source_id"] = df["admission_source_id"].astype(str)
 
-# Mappings
 map_admission_type = {
     "1": "Emergencia", "2": "Urgente", "3": "Electivo", "4": "Recién nacido",
     "5": "Sin_info", "6": "Sin_info", "7": "Centro de trauma", "8": "Sin_info"
@@ -77,7 +72,6 @@ map_admission_source = {
     "15": "Sin_info", "17": "Sin_info", "20": "Sin_info", "22": "Sin_info", "25": "Sin_info"
 }
 
-# Aplicar map y asignar "Desconocido" si no está en diccionario
 df["admission_type_id"] = df["admission_type_id"].map(lambda x: map_admission_type.get(x, "Desconocido"))
 df["discharge_disposition_id"] = df["discharge_disposition_id"].map(lambda x: map_discharge_disposition.get(x, "Desconocido"))
 df["admission_source_id"] = df["admission_source_id"].map(lambda x: map_admission_source.get(x, "Desconocido"))
@@ -90,8 +84,7 @@ df = df.replace(missing_vals, pd.NA)
 
 cat_cols = df.select_dtypes(include='object').columns
 for col in cat_cols:
-    if df[col].isna().sum() > 0:
-        df[col] = df[col].fillna("Sin_info")
+    df[col] = df[col].fillna("Sin_info")
 
 df = df.drop(columns=["encounter_id", "patient_nbr"])
 
@@ -126,23 +119,24 @@ st.markdown("### Distribución de la variable objetivo (readmitted)")
 y = df["readmitted"]
 counts = y.value_counts()
 labels = ['NO', '<30', '>30']
-plt.figure(figsize=(6,4))
-plt.bar(labels, counts)
-plt.xlabel("Clase")
-plt.ylabel("Cantidad de observaciones")
-st.pyplot(plt)
+fig, ax = plt.subplots(figsize=(6,4))
+ax.bar(labels, counts)
+ax.set_xlabel("Clase")
+ax.set_ylabel("Cantidad de observaciones")
+st.pyplot(fig)
+plt.clf()
 
-# Histogramas numéricos
-num_cols = ["time_in_hospital", "num_lab_procedures", "num_medications"]
 st.markdown("### Histograma de variables numéricas")
-df[num_cols].hist(bins=30, figsize=(12,6), edgecolor="black")
-st.pyplot(plt)
+fig, ax = plt.subplots(figsize=(12,6))
+df[num_cols_pca].hist(bins=30, edgecolor="black", ax=ax)
+st.pyplot(fig)
+plt.clf()
 
-# Boxplot ejemplo
 st.markdown("### Boxplot tiempo en hospital según readmisión")
-plt.figure(figsize=(8,5))
-sns.boxplot(x=y, y=df["time_in_hospital"], palette="Set3")
-st.pyplot(plt)
+fig, ax = plt.subplots(figsize=(8,5))
+sns.boxplot(x=y, y=df["time_in_hospital"], palette="Set3", ax=ax)
+st.pyplot(fig)
+plt.clf()
 
 # -------------------------------
 # 7. Split de datos
@@ -166,20 +160,19 @@ pca = PCA()
 X_pca = pca.fit_transform(X_train_scaled)
 explained_var = np.cumsum(pca.explained_variance_ratio_)
 
-plt.figure(figsize=(8,5))
-plt.plot(range(1, len(explained_var)+1), explained_var, marker='o', linestyle='--')
-plt.axhline(y=0.85, color='r', linestyle='-')
-plt.xlabel("Número de componentes principales")
-plt.ylabel("Varianza acumulada explicada")
-plt.title("Varianza acumulada PCA")
-st.pyplot(plt)
+fig, ax = plt.subplots(figsize=(8,5))
+ax.plot(range(1, len(explained_var)+1), explained_var, marker='o', linestyle='--')
+ax.axhline(y=0.85, color='r', linestyle='-')
+ax.set_xlabel("Número de componentes principales")
+ax.set_ylabel("Varianza acumulada explicada")
+ax.set_title("Varianza acumulada PCA")
+st.pyplot(fig)
+plt.clf()
 
 # -------------------------------
 # 9. MCA
 # -------------------------------
 X_train_cat = x_train[cat_cols_mca].astype(str)
-X_test_cat  = x_test[cat_cols_mca].astype(str)
-
 mca_model = prince.MCA(n_components=15, random_state=42)
 mca_model = mca_model.fit(X_train_cat)
 X_mca = mca_model.transform(X_train_cat)
@@ -187,19 +180,21 @@ eigvals = mca_model.eigenvalues_
 var_exp = eigvals / eigvals.sum()
 cum_var_exp = np.cumsum(var_exp)
 
-plt.figure(figsize=(8,5))
-plt.plot(range(1, len(cum_var_exp)+1), cum_var_exp, marker='o', linestyle='--')
-plt.axhline(y=0.85, color='r', linestyle='-')
-plt.xlabel("Dimensiones MCA")
-plt.ylabel("Varianza acumulada explicada")
-plt.title("Varianza acumulada MCA")
-st.pyplot(plt)
+fig, ax = plt.subplots(figsize=(8,5))
+ax.plot(range(1, len(cum_var_exp)+1), cum_var_exp, marker='o', linestyle='--')
+ax.axhline(y=0.85, color='r', linestyle='-')
+ax.set_xlabel("Dimensiones MCA")
+ax.set_ylabel("Varianza acumulada explicada")
+ax.set_title("Varianza acumulada MCA")
+st.pyplot(fig)
+plt.clf()
 
 # -------------------------------
 # 10. Reducir dimensiones y combinar
 # -------------------------------
 n_pca = np.argmax(explained_var >= 0.85) + 1
 X_pca_reduced = X_pca[:, :n_pca]
+
 n_mca = np.argmax(cum_var_exp >= 0.85) + 1
 X_mca_reduced = X_mca.iloc[:, :n_mca].values
 
@@ -231,3 +226,4 @@ X_train_res, y_train_res = smote.fit_resample(X_train, y_train)
 st.markdown("### Datos listos para KNN y Árbol de decisión")
 st.write("Filas de entrenamiento balanceadas:", X_train_res.shape[0])
 st.write("Número de columnas:", X_train_res.shape[1])
+
