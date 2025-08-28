@@ -331,9 +331,9 @@ X_pca = pca.fit_transform(X_train_scaled)
 print(f"Número de componentes principales para explicar 85% varianza: {pca.n_components_}")
 print(f"Varianza explicada acumulada por estas componentes: {sum(pca.explained_variance_ratio_):.4f}")
 
-!pip install mca
+#!pip install mca
 
-!pip install prince
+#!pip install prince
 
 import pandas as pd
 import numpy as np
