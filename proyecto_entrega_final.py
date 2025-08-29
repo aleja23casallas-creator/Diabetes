@@ -150,28 +150,8 @@ st.write("Shape:", df.shape)
 st.write("Número de filas:", df.shape[0])
 st.write("Número de columnas:", df.shape[1])
 
-# Mostrar información general del DataFrame (ADAPTACIÓN)
-st.write("--- Información del DataFrame ---")
-buffer = io.StringIO()
-df.info(buf=buffer)
-st.text(buffer.getvalue())
-
-# Revisar valores faltantes
-st.write(df.isnull().sum())
-
-faltantes = df.isnull().mean() * 100
-st.write(faltantes.sort_values(ascending=False))
-
-# Para columnas categóricas
-for col in df.select_dtypes(include='object'):
-    st.write(f"\nValores únicos en {col}:")
-    st.write(df[col].value_counts())
-
 # Revisar duplicados
 st.write("Duplicados:", df.duplicated().sum())
-
-# Ver las filas duplicadas
-st.write(df[df.duplicated()])
 
 missing_vals = ["None", "?"]
 df = df.replace(missing_vals, pd.NA)
