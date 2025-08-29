@@ -370,20 +370,27 @@ X_pca = pca.fit_transform(X_train_scaled)
 st.write(f"Número de componentes principales para explicar 85% varianza: {pca.n_components_}")
 st.write(f"Varianza explicada acumulada por estas componentes: {sum(pca.explained_variance_ratio_):.4f}")
 
+# =========================
+# MCA 
+# =========================
+
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+# Intentar importar prince para MCA
 try:
     import prince
 except Exception as e:
     st.error("El paquete 'prince' es requerido para MCA. Agrégalo a requirements.txt.")
     st.stop()
 
+# Selección de variables categóricas para MCA
 X_train_cat = x_train[cat_cols_mca].astype(str)
 X_test_cat  = x_test[cat_cols_mca].astype(str)
 
+# Ejecutar MCA
 try:
     x_mca = prince.MCA(n_components=15, random_state=42)
     x_mca = x_mca.fit(X_train_cat)
@@ -391,8 +398,8 @@ try:
 except Exception as e:
     st.error(f"Error en MCA: {e}")
 
-#Transformar dimensiones MCA
-X_mca = x_mca.transform(X_train_cat)
+# Transformar dimensiones MCA y asegurarse que sea DataFrame
+X_mca_df = x_mca.transform(X_train_cat)
 
 # Varianza explicada acumulada
 try:
@@ -413,11 +420,8 @@ ax.set_title('Varianza acumulada explicada por MCA')
 ax.grid(True)
 st.pyplot(fig)
 
-import matplotlib.pyplot as plt
-import seaborn as sns
-
 # Coordenadas de las primeras 2 dimensiones
-loadings_cat = x_mca.column_coordinates(X_train_cat).iloc[:, :2]
+loadings_cat = X_mca_df.iloc[:, :2]
 
 # Calcular contribución por categoría
 loadings_sq = loadings_cat ** 2
@@ -449,31 +453,33 @@ for i, v in enumerate(contrib_pct_sorted.values):
 plt.tight_layout()
 st.pyplot(fig)
 
-import numpy as np
-X_reduced = np.hstack((X_pca, X_mca.values))
+# =========================
+# Concatenar PCA + MCA reducido
+# =========================
 
-#Seleccionar componentes según varianza acumulada ---
+# Seleccionar componentes PCA según varianza 85%
 n_pca = np.argmax(explained_var >= 0.85) + 1
 X_pca_reduced = X_pca[:, :n_pca]
 
+# Seleccionar componentes MCA según varianza 85%
 n_mca = np.argmax(cum_var_exp >= 0.85) + 1
-X_mca_reduced = X_mca.iloc[:, :n_mca].values  # convertir a numpy array
+X_mca_reduced = X_mca_df.iloc[:, :n_mca].values  # convertir explícitamente a numpy array
 
-#Concatenar
+# Concatenar PCA + MCA
 X_reduced = np.hstack((X_pca_reduced, X_mca_reduced))
 
-# Dataframe
+# Crear DataFrame final
 pca_col_names = [f"PCA_{i+1}" for i in range(n_pca)]
 mca_col_names = [f"MCA_{i+1}" for i in range(n_mca)]
 col_names = pca_col_names + mca_col_names
 
 X_reduced_df = pd.DataFrame(X_reduced, columns=col_names, index=x_train.index)
 
+# Mostrar resultado
 st.write(X_reduced_df.head())
-
 st.write("Filas X_train:", x_train.shape[0])
 st.write("Filas PCA:", X_pca.shape[0])
-st.write("Filas MCA:", X_mca.shape[0])
+st.write("Filas MCA:", X_mca_df.shape[0])
 st.write("Filas X_reduced_df:", X_reduced_df.shape[0])
 st.write("Número de filas:", X_reduced_df.shape[0])
 st.write("Número de columnas:", X_reduced_df.shape[1])
