@@ -1,6 +1,4 @@
-# =========================
-# Importaciones EXACTAS que tenías
-# =========================
+
 from pandas import read_csv
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
@@ -8,8 +6,6 @@ from sklearn.preprocessing import OrdinalEncoder
 from sklearn.feature_selection import SelectKBest
 from sklearn.feature_selection import chi2
 from matplotlib import pyplot
-
-# (ADAPTACIÓN) Importaciones para Streamlit y gráficos
 import streamlit as st
 import io
 import pandas as pd
@@ -43,18 +39,10 @@ st.markdown("---")
 if __doc__:
     st.markdown(__doc__)
 
-# =========================
-# (ADAPTACIÓN) Colab: montar Drive (se omite fuera de Colab)
-# =========================
-try:
-    from google.colab import drive
-    drive.mount('/content/drive')
-except Exception:
-    st.info("Ejecutando fuera de Colab: se omite drive.mount().")
 
 # =========================
-# CARGA DE DATOS (ADAPTACIÓN)
-# Primero intenta leer del repo local; si falla, usa la ruta de Colab
+# CARGA DE DATOS 
+
 # =========================
 df = None
 try:
@@ -252,7 +240,6 @@ st.pyplot(plt.gcf())
 
 st.markdown("""📊 Boxplot por clase objetivo""")
 
-import seaborn as sns  # (ya importado arriba, lo mantengo como en tu código)
 # Boxplot
 fig, ax = plt.subplots(figsize=(8,5))
 sns.boxplot(x=df["readmitted"], y=df["time_in_hospital"], palette="Set3", ax=ax)
@@ -295,7 +282,7 @@ X_test_scaled  = scaler.transform(x_test[num_cols_pca])
 st.markdown("""# TAREA 1: PCA + MCA""")
 
 from sklearn.datasets import load_breast_cancer
-from sklearn.preprocessing import StandardScaler as _SS_  # se mantiene import redundante como en tu código
+from sklearn.preprocessing import StandardScaler as _SS_  
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 import seaborn as sns
