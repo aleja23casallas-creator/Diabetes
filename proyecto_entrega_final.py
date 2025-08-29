@@ -369,23 +369,16 @@ X_pca = pca.fit_transform(X_train_scaled)
 st.write(f"Número de componentes principales para explicar 85% varianza: {pca.n_components_}")
 st.write(f"Varianza explicada acumulada por estas componentes: {sum(pca.explained_variance_ratio_):.4f}")
 
-# (ADAPTACIÓN) Instalar paquetes en runtime no es viable; import con manejo de error
-try:
-    import mca
-except Exception:
-    st.warning("El paquete 'mca' no está instalado (no se usa directamente más adelante).")
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 try:
     import prince
 except Exception as e:
     st.error("El paquete 'prince' es requerido para MCA. Agrégalo a requirements.txt.")
     st.stop()
-
-import pandas as pd  # repetidos en tu código original
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-# from sklearn.datasets import load_breast_cancer  # ya importado arriba
 
 X_train_cat = x_train[cat_cols_mca].astype(str)
 X_test_cat  = x_test[cat_cols_mca].astype(str)
