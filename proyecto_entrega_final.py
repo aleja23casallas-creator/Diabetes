@@ -373,7 +373,7 @@ st.write(f"Varianza explicada acumulada por estas componentes: {sum(pca.explaine
 
 st.markdown("""# Análisis de los resultados obtenidos en MCA y PCA""")
 
-🔹 Análisis de resultados PCA
+Análisis de resultados PCA
 
 Al aplicar PCA sobre las variables numéricas del dataset:
 
@@ -384,7 +384,7 @@ El scatterplot mostró cierta separación entre las clases de readmisión (NO, <
 Conclusión
 La reducción permitió simplificar el conjunto de variables numéricas manteniendo más del 85% de la varianza. Esto mejora la eficiencia y reduce el riesgo de sobreajuste, aunque por sí sola la variabilidad numérica no separa completamente las clases.
 
-🔹 Análisis de resultados MCA
+Análisis de resultados MCA
 
 Con el MCA aplicado a las variables categóricas (como género, tipo de admisión, tipo de alta, diagnósticos, etc.):
 
