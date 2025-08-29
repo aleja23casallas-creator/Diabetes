@@ -390,14 +390,19 @@ x_mca = x_mca.fit(X_train_cat)
 
 # --- Transformar MCA ---
 X_mca_df = x_mca.transform(X_train_cat)
-X_mca_df.index = X_train_cat.index
-
+# Asegurarse que sea DataFrame y con índices correctos
+if not isinstance(X_mca_df, pd.DataFrame):
+    X_mca_df = pd.DataFrame(X_mca_df, index=X_train_cat.index)
 # --- Varianza explicada acumulada ---
 try:
     var_exp = x_mca.explained_inertia_  # prince >=0.16
 except AttributeError:
-    eigvals = x_mca.eigenvalues_
-    var_exp = eigvals / eigvals.sum()
+    eigvals = getattr(x_mca, "eigenvalues_", None)
+    if eigvals is not None:
+        var_exp = eigvals / eigvals.sum()
+    else:
+        # fallback si no existe explained_inertia_ ni eigenvalues_
+        var_exp = np.var(X_mca_df, axis=0) / np.var(X_mca_df, axis=0).sum()
 
 cum_var_exp = np.cumsum(var_exp)
 
@@ -413,6 +418,9 @@ st.pyplot(fig)
 
 # --- Loadings / contribución de variables categóricas ---
 loadings_cat = x_mca.column_coordinates(X_train_cat).iloc[:, :2]
+
+# Evitar problemas con índices sin '__'
+loadings_cat.index = [str(i) for i in loadings_cat.index]
 
 loadings_sq = loadings_cat ** 2
 contrib_cat = loadings_sq.div(loadings_sq.sum(axis=0), axis=1)
@@ -441,6 +449,8 @@ st.pyplot(fig)
 
 # --- Seleccionar componentes según varianza >=85% ---
 n_mca = np.argmax(cum_var_exp >= 0.85) + 1
+
+# Asegurarse que X_mca_df es DataFrame
 X_mca_reduced = X_mca_df.iloc[:, :n_mca].values
 
 # --- PCA reducido (ya calculado previamente) ---
@@ -448,6 +458,8 @@ X_pca_reduced = X_pca  # PCA con n_components=0.85
 n_pca = X_pca_reduced.shape[1]
 
 # --- Concatenar PCA + MCA ---
+# Asegurarse de que tengan el mismo número de filas
+assert X_pca_reduced.shape[0] == X_mca_reduced.shape[0], "PCA y MCA tienen diferente número de filas!"
 X_reduced = np.hstack((X_pca_reduced, X_mca_reduced))
 
 # --- Crear DataFrame final ---
