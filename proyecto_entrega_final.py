@@ -1,44 +1,55 @@
-# ============================
-# APP Streamlit - Análisis Diabetes (130 hospitales EE.UU)
-# ============================
+# Proyecto Análisis Diabetes - Datos clínicos en 130 hospitales de EE.UU
+# ---------------------------------------------------------------------------------
+# El conjunto de datos representa diez años (1999-2008) de atención clínica
+# en 130 hospitales y redes de prestación integradas en EE.UU.
+#
+# Variables disponibles incluyen: raza, género, edad, peso, códigos de diagnóstico,
+# estancia hospitalaria, número de procedimientos, resultados de laboratorio,
+# medicaciones, especialidad médica, y reingresos hospitalarios.
+#
+# El análisis se centra en:
+#   - Limpieza de datos
+#   - Análisis descriptivo
+#   - PCA (variables numéricas)
+#   - MCA (variables categóricas)
+#   - Visualizaciones exploratorias
+#
+# Este script está adaptado para ejecutarse en Streamlit.
 
-import streamlit as st
+# =========================
+# Librerías
+# =========================
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+import streamlit as st
+import io
 from sklearn.decomposition import PCA
-from sklearn.preprocessing import StandardScaler
-import prince
-from imblearn.over_sampling import SMOTE
+from prince import MCA
 
-# ============================
+# =========================
 # Carga de datos
-# ============================
+# =========================
+st.title("Proyecto de Análisis de Diabetes")
 
-st.title("Análisis de Datos de Diabetes - 130 Hospitales (EE.UU.)")
-
-# Cargar dataset desde GitHub (debe estar en el mismo repo)
 df = pd.read_csv("diabetic_data.csv")
 
-st.subheader("Vista general de los datos")
+st.subheader("Vista previa de los datos")
 st.write(df.head())
 
 st.subheader("Información del DataFrame")
-buffer = []
+buffer = io.StringIO()
 df.info(buf=buffer)
-st.text("\n".join(buffer))
+s = buffer.getvalue()
+st.text(s)
 
-# ============================
-# Limpieza de datos
-# ============================
+st.subheader("Descripción estadística")
+st.write(df.describe(include="all"))
 
-st.subheader("Limpieza de datos")
-
-# Reemplazar '?' por NaN
-df = df.replace('?', np.nan)
-
-# Convertir numéricas a entero donde corresponde
+# =========================
+# Variables para PCA y MCA
+# =========================
 num_cols_pca = [
     "time_in_hospital", "num_lab_procedures", "num_procedures",
     "num_medications", "number_outpatient", "number_emergency",
@@ -65,90 +76,78 @@ categoricas_codigos = [
 
 cat_cols_mca.extend(categoricas_codigos)
 
-st.write("Variables numéricas (para PCA):", num_cols_pca)
-st.write("Variables categóricas (para MCA):", cat_cols_mca)
+st.write("Variables numéricas para PCA:", num_cols_pca)
+st.write("Variables categóricas para MCA:", cat_cols_mca)
 
-# ============================
-# Distribución de la variable objetivo
-# ============================
-
+# =========================
+# Distribución de readmisiones
+# =========================
 st.subheader("Distribución de readmisiones")
-
 fig, ax = plt.subplots(figsize=(6,4))
-df["readmitted"].value_counts().plot(kind="bar", ax=ax, color=["#66c2a5","#fc8d62","#8da0cb"])
+sns.countplot(x=df["readmitted"], order=df["readmitted"].value_counts().index, palette="Set2", ax=ax)
 ax.set_title("Distribución de readmisiones")
 ax.set_ylabel("Número de pacientes")
 ax.set_xlabel("Readmisión")
 st.pyplot(fig)
 
-# ============================
-# Boxplot: tiempo en hospital según readmisión
-# ============================
-
+# =========================
+# Boxplot de tiempo en hospital según readmisión
+# =========================
 st.subheader("Tiempo en hospital según readmisión")
-
 fig, ax = plt.subplots(figsize=(8,5))
 sns.boxplot(x=df["readmitted"], y=df["time_in_hospital"], palette="Set3", ax=ax)
 ax.set_title("Tiempo en hospital según readmisión")
 st.pyplot(fig)
 
-# ============================
-# PCA - Variables numéricas
-# ============================
+# =========================
+# PCA (Análisis de Componentes Principales)
+# =========================
+st.subheader("PCA - Variables numéricas")
 
-st.subheader("PCA (Análisis de Componentes Principales) - Variables Numéricas")
-
-X_num = df[num_cols_pca].dropna()
-scaler = StandardScaler()
-X_scaled = scaler.fit_transform(X_num)
-
+X_num = df[num_cols_pca].fillna(0)
 pca = PCA(n_components=2)
-X_pca = pca.fit_transform(X_scaled)
-
-fig, ax = plt.subplots()
-ax.scatter(X_pca[:,0], X_pca[:,1], alpha=0.3)
-ax.set_xlabel("Componente 1")
-ax.set_ylabel("Componente 2")
-ax.set_title("PCA - Variables numéricas")
-st.pyplot(fig)
+X_pca = pca.fit_transform(X_num)
 
 st.write("Varianza explicada por cada componente:", pca.explained_variance_ratio_)
-st.write("Varianza total explicada:", pca.explained_variance_ratio_.sum())
 
-# ============================
-# MCA - Variables categóricas
-# ============================
-
-st.subheader("MCA (Análisis de Correspondencias Múltiples) - Variables Categóricas")
-
-X_cat = df[cat_cols_mca].dropna()
-
-mca = prince.MCA(n_components=2, random_state=42)
-mca = mca.fit(X_cat)
-
-fig, ax = plt.subplots()
-X_mca = mca.transform(X_cat)
-ax.scatter(X_mca[0], X_mca[1], alpha=0.3)
-ax.set_xlabel("Dimensión 1")
-ax.set_ylabel("Dimensión 2")
-ax.set_title("MCA - Variables categóricas")
+fig, ax = plt.subplots(figsize=(6,4))
+ax.scatter(X_pca[:,0], X_pca[:,1], alpha=0.3)
+ax.set_title("PCA - Proyección en 2D")
+ax.set_xlabel("PC1")
+ax.set_ylabel("PC2")
 st.pyplot(fig)
 
-# ============================
-# Explicaciones
-# ============================
+# =========================
+# MCA (Análisis de Correspondencias Múltiples)
+# =========================
+st.subheader("MCA - Variables categóricas")
 
-st.subheader("Interpretación de PCA y MCA")
+X_cat = df[cat_cols_mca].astype(str).fillna("Missing")
+mca = MCA(n_components=2, random_state=42)
+X_mca = mca.fit(X_cat)
 
-st.markdown("""
-- **PCA (numéricas):** nos permite reducir la dimensionalidad de las variables continuas como número de procedimientos, medicamentos, tiempo en hospital, etc.  
-  - El **Componente 1** concentra la mayor variabilidad de los pacientes según uso de procedimientos y hospitalización.  
-  - El **Componente 2** puede asociarse a la frecuencia de reingresos y número de diagnósticos.  
-  - Así, PCA nos ayuda a identificar perfiles de pacientes con mayor consumo de recursos clínicos.
+st.write("Inercia explicada:", mca.explained_inertia_)
 
-- **MCA (categóricas):** se aplica a variables como raza, género, edad, tipo de ingreso, diagnóstico principal/secundario, uso de medicamentos.  
-  - La **Dimensión 1** suele separar pacientes por edad y tipo de tratamiento recibido.  
-  - La **Dimensión 2** captura diferencias según diagnósticos y tipo de atención (urgencias, hospitalización, ambulatorio).  
-  - Esto permite identificar perfiles de riesgo en función de características demográficas y clínicas categóricas.
+fig, ax = plt.subplots(figsize=(6,4))
+mca.plot_coordinates(X_cat, ax=ax, show_row_points=False, show_column_points=True)
+ax.set_title("MCA - Proyección de categorías")
+st.pyplot(fig)
+
+# =========================
+# Integración PCA + MCA
+# =========================
+st.subheader("Integración PCA + MCA")
+
+X_reduced = np.hstack((X_pca, X_mca.transform(X_cat)))
+st.write("Forma de la matriz reducida combinada:", X_reduced.shape)
+
+# =========================
+# Conclusiones
+# =========================
+st.subheader("Conclusiones")
+st.write("""
+- PCA permite resumir la variabilidad de las variables numéricas en pocos componentes principales.
+- MCA ayuda a representar la estructura de las variables categóricas en un espacio reducido.
+- La combinación PCA + MCA nos da una representación compacta y mixta de pacientes.
 """)
 
