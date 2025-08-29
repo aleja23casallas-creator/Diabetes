@@ -370,6 +370,7 @@ X_pca = pca.fit_transform(X_train_scaled)
 st.write(f"Número de componentes principales para explicar 85% varianza: {pca.n_components_}")
 st.write(f"Varianza explicada acumulada por estas componentes: {sum(pca.explained_variance_ratio_):.4f}")
 
+
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -382,34 +383,37 @@ except Exception as e:
     st.error("El paquete 'prince' es requerido para MCA. Agrégalo a requirements.txt.")
     st.stop()
 
-# Selección de variables categóricas para MCA
+# =========================
+# PCA + MCA + Concatenación
+# =========================
+
+# PCA ya calculado antes con n_components=0.85
+# Asegúrate de tener:
+# X_pca = pca.fit_transform(X_train_scaled)
+# pca = PCA(n_components=0.85)
+# X_pca_reduced = X_pca
+
+n_pca = X_pca.shape[1]
+X_pca_reduced = X_pca  # Confirmar que es el PCA reducido
+
+# MCA
 X_train_cat = x_train[cat_cols_mca].astype(str)
 X_test_cat  = x_test[cat_cols_mca].astype(str)
 
-# Ejecutar MCA
 x_mca = prince.MCA(n_components=15, random_state=42)
 x_mca = x_mca.fit(X_train_cat)
-st.write("MCA ejecutado correctamente.")
 
-# Transformar dimensiones MCA y asegurarse que sea DataFrame
+# Transformar MCA
 X_mca_df = x_mca.transform(X_train_cat)
 X_mca_df.index = X_train_cat.index
 
-# Varianza explicada acumulada
-var_exp = x_mca.explained_inertia_
+# Varianza explicada acumulada MCA
+try:
+    var_exp = x_mca.explained_inertia_  # prince >=0.16
+except AttributeError:
+    var_exp = x_mca.eigenvalues / x_mca.eigenvalues.sum()  # prince antiguos
+
 cum_var_exp = np.cumsum(var_exp)
-
-# Graficar varianza acumulada
-fig, ax = plt.subplots(figsize=(8,5))
-ax.plot(range(1, len(cum_var_exp)+1), cum_var_exp, marker='o', linestyle='--')
-ax.axhline(y=0.85, color='r', linestyle='-')
-ax.set_xlabel('Dimensiones MCA')
-ax.set_ylabel('Varianza acumulada explicada')
-ax.set_title('Varianza acumulada explicada por MCA')
-ax.grid(True)
-st.pyplot(fig)
-
-# Seleccionar dimensiones MCA que expliquen 85% de la varianza
 n_mca = np.argmax(cum_var_exp >= 0.85) + 1
 X_mca_reduced = X_mca_df.iloc[:, :n_mca].values
 
@@ -417,22 +421,21 @@ X_mca_reduced = X_mca_df.iloc[:, :n_mca].values
 X_reduced = np.hstack((X_pca_reduced, X_mca_reduced))
 
 # Crear DataFrame final
-n_pca = X_pca_reduced.shape[1]
 pca_col_names = [f"PCA_{i+1}" for i in range(n_pca)]
 mca_col_names = [f"MCA_{i+1}" for i in range(n_mca)]
 col_names = pca_col_names + mca_col_names
 
 X_reduced_df = pd.DataFrame(X_reduced, columns=col_names, index=x_train.index)
 
-# Mostrar resultado
+# Mostrar resultados
 st.write(X_reduced_df.head())
 st.write("Filas X_train:", x_train.shape[0])
 st.write("Filas PCA:", X_pca.shape[0])
 st.write("Filas MCA:", X_mca_df.shape[0])
 st.write("Filas X_reduced_df:", X_reduced_df.shape[0])
-st.write("Número de filas:", X_reduced_df.shape[0])
 st.write("Número de columnas:", X_reduced_df.shape[1])
 st.write("Índices iguales?", X_reduced_df.index.equals(y_train.index))
+
 
 st.markdown("""# Análisis de los resultados obtenidos en MCA y PCA
 
