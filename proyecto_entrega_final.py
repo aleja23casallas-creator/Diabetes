@@ -12,7 +12,6 @@ Objetivo: Analizar la readmisión de pacientes diabéticos, es decir, si despué
 
 """)
 
----
 st.subheader("Obtener los datos")
 
 st.markdown("---")
