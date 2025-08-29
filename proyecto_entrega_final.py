@@ -371,7 +371,7 @@ st.write(f"Número de componentes principales para explicar 85% varianza: {pca.n
 st.write(f"Varianza explicada acumulada por estas componentes: {sum(pca.explained_variance_ratio_):.4f}")
 
 
-st.markdown("""# Análisis de los resultados obtenidos en MCA y PCA""")
+st.markdown("""# Análisis de los resultados obtenidos en MCA y PCA
 
 Análisis de resultados PCA
 
@@ -399,3 +399,4 @@ Al combinar los componentes numéricos (PCA) y categóricos (MCA):
 
 Se obtiene un conjunto de datos reducido y balanceado entre ambos tipos de información, manteniendo la mayor parte de la varianza de los datos originales.
 
+""")
