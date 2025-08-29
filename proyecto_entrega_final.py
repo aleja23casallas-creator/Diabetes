@@ -400,6 +400,7 @@ except Exception as e:
 
 # Transformar dimensiones MCA y asegurarse que sea DataFrame
 X_mca_df = x_mca.transform(X_train_cat)
+X_mca_df.index = X_train_cat.index
 
 # Varianza explicada acumulada
 try:
@@ -421,11 +422,11 @@ ax.grid(True)
 st.pyplot(fig)
 
 # Coordenadas de las primeras 2 dimensiones
-loadings_cat = X_mca_df.iloc[:, :2]
-
-# Calcular contribución por categoría
-loadings_sq = loadings_cat ** 2
-contrib_cat = loadings_sq.div(loadings_sq.sum(axis=0), axis=1)
+loadings_cat = pd.DataFrame(
+    X_mca_df.iloc[:, :2].values,
+    index=X_train_cat.index,
+    columns=['Dim1', 'Dim2']
+)
 
 # Extraer nombre de variable original (asumiendo formato 'variable__categoría')
 contrib_cat.index = contrib_cat.index.str.split('__').str[0]
@@ -456,14 +457,13 @@ st.pyplot(fig)
 # =========================
 # Concatenar PCA + MCA reducido
 # =========================
+# Transformar MCA y alinear índice
+X_mca_df = x_mca.transform(X_train_cat)
+X_mca_df.index = X_train_cat.index
 
-# Seleccionar componentes PCA según varianza 85%
-n_pca = np.argmax(explained_var >= 0.85) + 1
-X_pca_reduced = X_pca[:, :n_pca]
-
-# Seleccionar componentes MCA según varianza 85%
+# Seleccionar dimensiones según varianza
 n_mca = np.argmax(cum_var_exp >= 0.85) + 1
-X_mca_reduced = X_mca_df.iloc[:, :n_mca].values  # convertir explícitamente a numpy array
+X_mca_reduced = X_mca_df.iloc[:, :n_mca].values  # numpy
 
 # Concatenar PCA + MCA
 X_reduced = np.hstack((X_pca_reduced, X_mca_reduced))
