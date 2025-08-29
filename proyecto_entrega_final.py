@@ -393,7 +393,7 @@ Se encontró que con aproximadamente 13 dimensiones se logra superar el 85% de v
 El MCA permitió visualizar la relación entre categorías: por ejemplo, algunos tipos de admisión o de disposición al alta tienden a asociarse con mayor probabilidad de reingreso.
 
 
-🔹 Integración PCA + MCA
+Integración PCA + MCA
 
 Al combinar los componentes numéricos (PCA) y categóricos (MCA):
 
