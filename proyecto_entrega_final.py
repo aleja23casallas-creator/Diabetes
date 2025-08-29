@@ -371,9 +371,8 @@ st.write(f"Número de componentes principales para explicar 85% varianza: {pca.n
 st.write(f"Varianza explicada acumulada por estas componentes: {sum(pca.explained_variance_ratio_):.4f}")
 
 # =========================
-# MCA + Concatenación PCA
+# MCA + Concatenación PCA (Arreglado)
 # =========================
-
 import prince
 import numpy as np
 import pandas as pd
@@ -381,28 +380,23 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 # --- Selección de variables categóricas ---
-X_train_cat = x_train[cat_cols_mca].astype(str)
-X_test_cat  = x_test[cat_cols_mca].astype(str)
+X_train_cat = x_train[cat_cols_mca].fillna("Sin_info").astype(str)
+X_test_cat  = x_test[cat_cols_mca].fillna("Sin_info").astype(str)
 
 # --- Aplicar MCA ---
-x_mca = prince.MCA(n_components=15, random_state=42)
-x_mca = x_mca.fit(X_train_cat)
+mca = prince.MCA(n_components=15, random_state=42)
+mca = mca.fit(X_train_cat)
 
 # --- Transformar MCA ---
-X_mca_df = x_mca.transform(X_train_cat)
-# Asegurarse que sea DataFrame y con índices correctos
-if not isinstance(X_mca_df, pd.DataFrame):
-    X_mca_df = pd.DataFrame(X_mca_df, index=X_train_cat.index)
+X_mca_df = mca.transform(X_train_cat)
+X_mca_df.reset_index(drop=True, inplace=True)  # Reseteamos índice para evitar conflictos
+
 # --- Varianza explicada acumulada ---
 try:
-    var_exp = x_mca.explained_inertia_  # prince >=0.16
+    var_exp = mca.explained_inertia_  # prince >=0.16
 except AttributeError:
-    eigvals = getattr(x_mca, "eigenvalues_", None)
-    if eigvals is not None:
-        var_exp = eigvals / eigvals.sum()
-    else:
-        # fallback si no existe explained_inertia_ ni eigenvalues_
-        var_exp = np.var(X_mca_df, axis=0) / np.var(X_mca_df, axis=0).sum()
+    eigvals = mca.eigenvalues_
+    var_exp = eigvals / eigvals.sum()
 
 cum_var_exp = np.cumsum(var_exp)
 
@@ -417,11 +411,7 @@ ax.grid(True)
 st.pyplot(fig)
 
 # --- Loadings / contribución de variables categóricas ---
-loadings_cat = x_mca.column_coordinates(X_train_cat).iloc[:, :2]
-
-# Evitar problemas con índices sin '__'
-loadings_cat.index = [str(i) for i in loadings_cat.index]
-
+loadings_cat = mca.column_coordinates(X_train_cat).iloc[:, :2]
 loadings_sq = loadings_cat ** 2
 contrib_cat = loadings_sq.div(loadings_sq.sum(axis=0), axis=1)
 
@@ -449,8 +439,6 @@ st.pyplot(fig)
 
 # --- Seleccionar componentes según varianza >=85% ---
 n_mca = np.argmax(cum_var_exp >= 0.85) + 1
-
-# Asegurarse que X_mca_df es DataFrame
 X_mca_reduced = X_mca_df.iloc[:, :n_mca].values
 
 # --- PCA reducido (ya calculado previamente) ---
@@ -458,8 +446,6 @@ X_pca_reduced = X_pca  # PCA con n_components=0.85
 n_pca = X_pca_reduced.shape[1]
 
 # --- Concatenar PCA + MCA ---
-# Asegurarse de que tengan el mismo número de filas
-assert X_pca_reduced.shape[0] == X_mca_reduced.shape[0], "PCA y MCA tienen diferente número de filas!"
 X_reduced = np.hstack((X_pca_reduced, X_mca_reduced))
 
 # --- Crear DataFrame final ---
@@ -467,17 +453,13 @@ pca_col_names = [f"PCA_{i+1}" for i in range(n_pca)]
 mca_col_names = [f"MCA_{i+1}" for i in range(n_mca)]
 col_names = pca_col_names + mca_col_names
 
-X_reduced_df = pd.DataFrame(X_reduced, columns=col_names, index=x_train.index)
+X_reduced_df = pd.DataFrame(X_reduced, columns=col_names)
 
 # --- Mostrar resultados en Streamlit ---
 st.write("✅ DataFrame PCA + MCA concatenado:")
 st.write(X_reduced_df.head())
-st.write("Filas X_train:", x_train.shape[0])
-st.write("Filas PCA:", X_pca.shape[0])
-st.write("Filas MCA:", X_mca_df.shape[0])
-st.write("Filas X_reduced_df:", X_reduced_df.shape[0])
 st.write("Número de columnas:", X_reduced_df.shape[1])
-st.write("Índices iguales?", X_reduced_df.index.equals(y_train.index))
+st.write("Número de filas:", X_reduced_df.shape[0])
 
 st.markdown("""# Análisis de los resultados obtenidos en MCA y PCA
 
