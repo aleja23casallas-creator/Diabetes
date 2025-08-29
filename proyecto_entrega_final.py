@@ -383,9 +383,12 @@ except Exception as e:
 X_train_cat = x_train[cat_cols_mca].astype(str)
 X_test_cat  = x_test[cat_cols_mca].astype(str)
 
-# Aplicar MCA
-x_mca = prince.MCA(n_components=15,random_state=42)
-x_mca = x_mca.fit(X_train_cat)
+try:
+    x_mca = prince.MCA(n_components=15, random_state=42)
+    x_mca = x_mca.fit(X_train_cat)
+    st.write("MCA ejecutado correctamente.")
+except Exception as e:
+    st.error(f"Error en MCA: {e}")
 
 #Transformar dimensiones MCA
 X_mca = x_mca.transform(X_train_cat)
