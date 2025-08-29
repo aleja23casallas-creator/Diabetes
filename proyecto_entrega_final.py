@@ -370,10 +370,6 @@ X_pca = pca.fit_transform(X_train_scaled)
 st.write(f"Número de componentes principales para explicar 85% varianza: {pca.n_components_}")
 st.write(f"Varianza explicada acumulada por estas componentes: {sum(pca.explained_variance_ratio_):.4f}")
 
-# =========================
-# MCA 
-# =========================
-
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -391,24 +387,16 @@ X_train_cat = x_train[cat_cols_mca].astype(str)
 X_test_cat  = x_test[cat_cols_mca].astype(str)
 
 # Ejecutar MCA
-try:
-    x_mca = prince.MCA(n_components=15, random_state=42)
-    x_mca = x_mca.fit(X_train_cat)
-    st.write("MCA ejecutado correctamente.")
-except Exception as e:
-    st.error(f"Error en MCA: {e}")
+x_mca = prince.MCA(n_components=15, random_state=42)
+x_mca = x_mca.fit(X_train_cat)
+st.write("MCA ejecutado correctamente.")
 
 # Transformar dimensiones MCA y asegurarse que sea DataFrame
 X_mca_df = x_mca.transform(X_train_cat)
 X_mca_df.index = X_train_cat.index
 
 # Varianza explicada acumulada
-try:
-    eigvals = x_mca.eigenvalues_
-except AttributeError:
-    eigvals = x_mca.eigenvalues
-
-var_exp = eigvals / eigvals.sum()
+var_exp = x_mca.explained_inertia_
 cum_var_exp = np.cumsum(var_exp)
 
 # Graficar varianza acumulada
@@ -421,54 +409,15 @@ ax.set_title('Varianza acumulada explicada por MCA')
 ax.grid(True)
 st.pyplot(fig)
 
-# Coordenadas de las primeras 2 dimensiones
-loadings_cat = pd.DataFrame(
-    X_mca_df.iloc[:, :2].values,
-    index=X_train_cat.index,
-    columns=['Dim1', 'Dim2']
-)
-
-# Extraer nombre de variable original (asumiendo formato 'variable__categoría')
-contrib_cat.index = contrib_cat.index.str.split('__').str[0]
-
-# Sumar contribuciones por variable
-contrib_var = contrib_cat.groupby(contrib_cat.index).sum().sum(axis=1)
-
-# Normalizar para mostrar como porcentaje
-contrib_pct = contrib_var / contrib_var.sum() * 100
-
-# Ordenar
-contrib_pct_sorted = contrib_pct.sort_values()
-
-# Graficar horizontalmente
-fig, ax = plt.subplots(figsize=(12, 10))
-sns.barplot(x=contrib_pct_sorted.values, y=contrib_pct_sorted.index, palette='BuGn', ax=ax)
-ax.set_ylabel('Contribución (%) a Dim 1 y 2')
-ax.set_title('Contribución total de todas las variables a las primeras 2 dimensiones MCA')
-ax.grid(axis='x', linestyle='--', alpha=0.5)
-
-# Agregar etiquetas a cada barra
-for i, v in enumerate(contrib_pct_sorted.values):
-    ax.text(v + 0.2, i, f"{v:.2f}%", va='center')
-
-plt.tight_layout()
-st.pyplot(fig)
-
-# =========================
-# Concatenar PCA + MCA reducido
-# =========================
-# Transformar MCA y alinear índice
-X_mca_df = x_mca.transform(X_train_cat)
-X_mca_df.index = X_train_cat.index
-
-# Seleccionar dimensiones según varianza
+# Seleccionar dimensiones MCA que expliquen 85% de la varianza
 n_mca = np.argmax(cum_var_exp >= 0.85) + 1
-X_mca_reduced = X_mca_df.iloc[:, :n_mca].values  # numpy
+X_mca_reduced = X_mca_df.iloc[:, :n_mca].values
 
 # Concatenar PCA + MCA
 X_reduced = np.hstack((X_pca_reduced, X_mca_reduced))
 
 # Crear DataFrame final
+n_pca = X_pca_reduced.shape[1]
 pca_col_names = [f"PCA_{i+1}" for i in range(n_pca)]
 mca_col_names = [f"MCA_{i+1}" for i in range(n_mca)]
 col_names = pca_col_names + mca_col_names
