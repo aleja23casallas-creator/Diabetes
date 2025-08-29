@@ -1,21 +1,3 @@
-st.title("Diabetes-Datos clínicos de 130 hospitales y centros de atención integrados en EE.UU")
-st.markdown("""
-**El conjunto de datos:**
-Readmisiones hospitalarias por diabetesde atención clínica en 130 hospitales de EE. UU. y redes de prestación integradas.
-Periodo: 10 años (1999–2008)
-
-
-
-Los datos contienen atributos como el número de pacientes, la raza, el sexo, la edad, el tipo de ingreso, el tiempo en el hospital, la especialidad médica del médico de admisión, el número de pruebas de laboratorio realizadas, el resultado de la prueba de HbA1c, el diagnóstico, el número de medicamentos, los medicamentos para la diabetes, el número de visitas ambulatorias, hospitalarias y de emergencia en el año anterior a la hospitalización, etc.
-
-Objetivo: Analizar la readmisión de pacientes diabéticos, es decir, si después del alta regresan al hospital dentro de 30 días, después de 30 días o nunca
-
-""")
-
-st.subheader("Obtener los datos")
-
-st.markdown("---")
-
 # =========================
 # Importaciones EXACTAS que tenías
 # =========================
@@ -34,6 +16,26 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+
+
+st.title("Diabetes-Datos clínicos de 130 hospitales y centros de atención integrados en EE.UU")
+st.markdown("""
+**El conjunto de datos:**
+Readmisiones hospitalarias por diabetesde atención clínica en 130 hospitales de EE. UU. y redes de prestación integradas.
+Periodo: 10 años (1999–2008)
+
+
+
+Los datos contienen atributos como el número de pacientes, la raza, el sexo, la edad, el tipo de ingreso, el tiempo en el hospital, la especialidad médica del médico de admisión, el número de pruebas de laboratorio realizadas, el resultado de la prueba de HbA1c, el diagnóstico, el número de medicamentos, los medicamentos para la diabetes, el número de visitas ambulatorias, hospitalarias y de emergencia en el año anterior a la hospitalización, etc.
+
+Objetivo: Analizar la readmisión de pacientes diabéticos, es decir, si después del alta regresan al hospital dentro de 30 días, después de 30 días o nunca
+
+""")
+
+st.subheader("Obtener los datos")
+
+st.markdown("---")
+
 
 # =========================
 # Mostrar el docstring inicial (tu explicación original)
