@@ -324,7 +324,7 @@ st.markdown("""# TAREA 1: PCA + MCA""")
 from sklearn.datasets import load_breast_cancer
 from sklearn.preprocessing import StandardScaler as _SS_  # se mantiene import redundante como en tu código
 from sklearn.decomposition import PCA
-import matplotlib.pyplot as plt as _plt_  # (mantener idea de imports múltiples)
+import matplotlib.pyplot as plt
 import seaborn as sns as _sns_
 import numpy as np as _np_
 import pandas as pd as _pd_
