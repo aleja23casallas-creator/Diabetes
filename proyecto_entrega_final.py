@@ -248,6 +248,36 @@ ax.set_xlabel("Readmisión")
 ax.set_ylabel("Tiempo en hospital (días)")
 st.pyplot(fig)
 
+st.markdown("📊 **Reingreso según tipo de alta (discharge_disposition_id)**")
+
+# Contar número de pacientes por tipo de alta y readmisión
+count_df = df.groupby(['discharge_disposition_id', 'readmitted']).size().reset_index(name='count')
+
+# Gráfico de barras agrupadas
+fig, ax = plt.subplots(figsize=(12,6))
+sns.barplot(data=count_df, x='discharge_disposition_id', y='count', hue='readmitted', palette='Set2', ax=ax)
+ax.set_title("Reingreso según tipo de alta hospitalaria")
+ax.set_xlabel("Discharge Disposition")
+ax.set_ylabel("Número de pacientes")
+plt.xticks(rotation=45, ha='right')
+plt.legend(title='Readmisión')
+plt.tight_layout()
+st.pyplot(fig)
+
+st.markdown("📊 **Porcentaje de reingreso por tipo de alta**")
+pct_df = df.groupby(['discharge_disposition_id', 'readmitted']).size().groupby(level=0).apply(lambda x: 100 * x / float(x.sum())).reset_index(name='percentage')
+
+fig, ax = plt.subplots(figsize=(12,6))
+sns.barplot(data=pct_df, x='discharge_disposition_id', y='percentage', hue='readmitted', palette='Set1', ax=ax)
+ax.set_title("Porcentaje de reingreso por tipo de alta hospitalaria")
+ax.set_xlabel("Discharge Disposition")
+ax.set_ylabel("Porcentaje (%)")
+plt.xticks(rotation=45, ha='right')
+plt.legend(title='Readmisión')
+plt.tight_layout()
+st.pyplot(fig)
+
+
 st.markdown("""📊 Distribucion de género o raza""")
 
 fig, ax = plt.subplots(figsize=(6,4))
